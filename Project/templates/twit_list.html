@@ -1,0 +1,60 @@
+<!--
+jinja2에서 사용할 수 있는 전역객체
+
+config: 현재 어플리케이션에 등록된 설정 객체(flask.config)
+request: 현재 요청된 객체(flask.request)
+session: 현재 유지되고 있는 세션 객체(flask.session)
+g: 전역변수로 사용되는 요청과 연결된 전역 객체(flask.g)
+url_for: 함수에 대한 URL을 얻기 위해 사용하는 함수(flask.url_for)
+get_flashed_messages: 뷰함수에서 flash함수를 사용해서 저장한 메시지를 얻어오는 함수(flask.get_flashed_messages())
+-->
+
+{% extends "layout.html" %} 
+{% block title %} 
+{% if request.endpoint == 'public_twit' %}
+  전체 트윗
+{% else %}
+  나의 트윗
+{% endif %}
+{% endblock %} {% block body %}
+<h2>{{ self.title() }}</h2>
+<!--block을 여러번 인쇄, 코드가 지저분해지는 것 방지. 특수 self변수 자체의 title 변수를 호출하겠다-->
+{% if g.user %}
+  {% if request.endpoint == 'user_twit' %}
+    <div class = followstatus>
+      {% if g.user.user_id == profile_user.user_id %}
+      자신의 트윗!!
+      {% elif followed %}
+      현재 팔로우 중 입니다.
+        <a class = "unfollow" href="{{ url_for('unfollow_user', username=profile_user.username) }}"> 언팔로우 하기 </a>
+      {% else %}
+      아직 팔로우 하지 않았습니다.
+        <a class = "follow" href="{{ url_for('follow_user', username=profile_user.username) }}"> 팔로우 하기 </a>
+      {% endif %}
+    </div>
+  {% elif request.endpoint == 'twit_list' %}
+	  <div class=twitbox>
+		  <h3> 무슨 일이 일어나고 있나요? </h3>
+		  <form action="{{ url_for('add_message') }}" method=POST>
+			  <p>
+				  <input type="text" name="text" size=60>
+          <input type="submit" value="공유하기">
+        </p>
+      </form>
+    </div>
+  {% endif %}
+{% endif %}
+<ul class="messages">
+  {% for message in messages %}
+  <li><img src={{ message.email | gravatar(size=48) }}/>
+    <p>
+      <strong><a href="{{ url_for('user_twit', username=message.username) }}"></a>{{ message.username }}</strong>
+      {{ message.text }}
+      <small>&mdash; {{ message.pub_date | datetimeformat }}</small>
+    </p>
+  </li>
+  {% else %}
+    <li>메시지가 존재하지 않습니다.</li>
+  {% endfor %}
+</ul>
+{% endblock %}
